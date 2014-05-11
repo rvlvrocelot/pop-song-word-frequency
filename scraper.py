@@ -23,7 +23,7 @@ def process_lyrics(songName, artistName):
 	parser = HTMLLyricParser()
 	lyrics =  str(soup.body.findAll(style="margin-left:10px;margin-right:10px;")[0])
 	parser.feed(lyrics)
-	print parser.lyrics
+	#print parser.lyrics
 	return parser.lyrics
 
 def get_top_100(year_list):
@@ -38,10 +38,18 @@ def get_top_100(year_list):
 			th_all = tr.findAll('th', {'scope': 'row', 'class': None})
 			if len(th_all) == 0:
 				continue
-
 			td_all = tr.findAll('td')
+			
 			song = td_all[0].text.strip().replace('"', '')
+			if "(" in song: song = song[:song.find("(")]
+			if "featuring" in song: song = song[:song.find("featuring")]
+			song = ''.join(ch for ch in song if ch.isalnum())
+			
 			artist = td_all[1].text.strip().replace('"', '')
+                        if "(" in artist: artist = artist[:artist.find("(")]
+                        if "featuring" in artist: artist = artist[:artist.find("featuring")]
+                        artist = ''.join(ch for ch in artist if ch.isalnum())
+		
 			song_list.add((artist, song))
 			
 	print song_list
@@ -51,4 +59,13 @@ if __name__ == '__main__':
 	#process_lyrics("letitgo", "idinamenzel")
 	year_list = [2000]
 	song_list = get_top_100(year_list)
-	print len(song_list)
+	#print len(song_list)
+	for artist, song in song_list:
+                song = song.lower().replace(' ', '')
+                artist = artist.lower().replace(' ', '')
+                try:
+                        process_lyrics(song, artist)
+                except:
+                        print song,artist
+
+

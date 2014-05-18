@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import string
 from HTMLParser import HTMLParser
 import wikipedia
+import time
+from collections import defaultdict
 
 class HTMLLyricParser(HTMLParser):
 	lyrics = []
@@ -18,12 +20,12 @@ class HTMLLyricParser(HTMLParser):
 # pep8:
 # Function names should be lowercase, with words separated by underscores as necessary to improve readability.
 def process_lyrics(songName, artistName):
+	time.sleep(2)
 	r = requests.get("http://www.azlyrics.com/lyrics/" + artistName + "/" + songName + ".html")
 	soup = BeautifulSoup(r.text)
 	parser = HTMLLyricParser()
 	lyrics =  str(soup.body.findAll(style="margin-left:10px;margin-right:10px;")[0])
 	parser.feed(lyrics)
-	#print parser.lyrics
 	return parser.lyrics
 
 def get_top_100(year_list):
@@ -50,22 +52,45 @@ def get_top_100(year_list):
                         if "featuring" in artist: artist = artist[:artist.find("featuring")]
                         artist = ''.join(ch for ch in artist if ch.isalnum())
 		
-			song_list.add((artist, song))
+			song_list.add((artist, song, year))
 			
 	print song_list
 	return song_list
+
+def put_in_dict(song,artist,year,tempDict):
+	#Jacob will definitely change this function name but whatever
+	lyricsList = process_lyrics(song,artist)
+	print song
+	for word in lyricsList:
+		if word == "love" : print word
+
+	for word in lyricsList:
+		if word not in tempDict[year]:
+			tempDict[year][word] = 0
+		tempDict[year][word] += 1
+	print tempDict[2000]["love"]
+
+def invert_dict(yearDict):
+	newDict = defaultdict(dict)
+	for year in yeardict:
+		for word in yearDict[year]:
+			newDict[word][year] = yearDict[year][word]
+	print newDict 
+		
+
 
 if __name__ == '__main__':
 	#process_lyrics("letitgo", "idinamenzel")
 	year_list = [2000]
 	song_list = get_top_100(year_list)
 	#print len(song_list)
-	for artist, song in song_list:
+	tempDict = defaultdict(dict)
+	for artist, song, year in song_list:
                 song = song.lower().replace(' ', '')
                 artist = artist.lower().replace(' ', '')
-                try:
-                        process_lyrics(song, artist)
-                except:
-                        print song,artist
+               # try:
+                put_in_dict(song, artist,year,tempDict)
+              #  except:
+             #		print song,artist
 
-
+	invert_dict(tempDict)

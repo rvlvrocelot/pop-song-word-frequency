@@ -23,11 +23,13 @@ class HTMLLyricParser(HTMLParser):
 
 # pep8:
 # Function names should be lowercase, with words separated by underscores as necessary to improve readability.
-def process_lyrics(songName, artistName):
+def process_lyrics(artist, song):
 	time.sleep(2)
-	r = requests.get("http://www.azlyrics.com/lyrics/" + artistName + "/" + songName + ".html")
+	r = requests.get("http://www.azlyrics.com/lyrics/" + artist + "/" + song + ".html", timeout=10)
 	soup = BeautifulSoup(r.text)
 	parser = HTMLLyricParser()
+	if len(parser.lyrics) != 0:
+		print 'error'
 	print parser.lyrics
 	lyrics =  str(soup.body.findAll(style="margin-left:10px;margin-right:10px;")[0])
 	parser.feed(lyrics)
@@ -106,16 +108,16 @@ def get_top_100(year_list):
 			td_all = tr.findAll('td')
 			
 			song = td_all[0].text.strip().replace('"', '')
-			#if "(" in song: song = song[:song.find("(")]
-			#if "featuring" in song: song = song[:song.find("featuring")]
+			if "(" in song: song = song[:song.find("(")]
+			if "featuring" in song: song = song[:song.find("featuring")]
 			#print song
-			#song = ''.join(ch for ch in song if ch.isalnum())
+			song = ''.join(ch for ch in song if ch.isalnum())
 			#print song
 			
 			artist = td_all[1].text.strip().replace('"', '')
-                        #if "(" in artist: artist = artist[:artist.find("(")]
-                        #if "featuring" in artist: artist = artist[:artist.find("featuring")]
-                        #artist = ''.join(ch for ch in artist if ch.isalnum())
+                        if "(" in artist: artist = artist[:artist.find("(")]
+                        if "featuring" in artist: artist = artist[:artist.find("featuring")]
+                        artist = ''.join(ch for ch in artist if ch.isalnum())
 		
 			song_list.add((artist, song, year))
 			
@@ -162,7 +164,8 @@ if __name__ == '__main__':
 	for artist, song, year in song_list:
 		print artist, song, year
 		try:
-			lyrics = search_lyric_direct(artist, song)	
+			#lyrics = search_lyric_direct(artist, song)	
+			lyrics = process_lyrics(artist, song)
 		except requests.exceptions.Timeout:
 			print 'timeout'
 			continue
